@@ -49,6 +49,7 @@ export async function POST(request) {
             gpa: parseFloat(newProfile.gpa)
         };
         profiles.push(newProfileData);
+        
 
         
         return Response.json(newProfileData, { status: 201 });
@@ -56,6 +57,7 @@ export async function POST(request) {
         return Response.json({ error: "Invalid data format" }, { status: 400 });
     }
 }
+
 export async function DELETE(request) {
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get("id");
