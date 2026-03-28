@@ -61,6 +61,10 @@ export async function POST(request) {
 export async function DELETE(request) {
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get("id");
-    profiles = profiles.filter((profile) => profile.id !== parseInt(id));
+    const index = profiles.findIndex((profile) => profile.id === parseInt(id));
+    if (index === -1) {
+        return Response.json({ error: "Profile not found" }, { status: 404 });
+    }
+    profiles.splice(index, 1);
     return Response.json({ message: "Profile deleted" }, { status: 200 });
 }
