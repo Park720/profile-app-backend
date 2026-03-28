@@ -49,6 +49,8 @@ export async function POST(request) {
             gpa: parseFloat(newProfile.gpa)
         };
         profiles.push(newProfileData);
+
+        
         return Response.json(newProfileData, { status: 201 });
     } catch (error) {
         return Response.json({ error: "Invalid data format" }, { status: 400 });
