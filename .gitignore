@@ -35,6 +35,8 @@ yarn-error.log*
 
 # vercel
 .vercel
+BLOB_READ_WRITE_TOKEN="vercel_blob_rw_Uv4SbVk9xQw3iNKg_ToUzqRzArtnOFXEXAu4ASmtN6YsNi5"
+
 
 # typescript
 *.tsbuildinfo
