@@ -1,0 +1,102 @@
+.addProfile {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.addProfile form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.addProfile label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #000);
+}
+
+.addProfile input,
+.addProfile textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    border: 1px solid var(--button-secondary-border, #ebebeb);
+    border-radius: 8px;
+    background: var(--foreground, #fff);
+    color: var(--text-primary, #000);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.addProfile input:focus,
+.addProfile textarea:focus {
+    border-color: var(--text-primary, #000);
+}
+
+.addProfile textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.addProfile input[type="file"] {
+    padding: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.addProfile button {
+    margin-top: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--background, #fafafa);
+    background: var(--text-primary, #000);
+    border: 1px solid transparent;
+    border-radius: 128px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.addProfile button:hover {
+    background: var(--button-primary-hover, #383838);
+}
+
+.addProfile button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.errorMessage {
+    color: #e53e3e;
+    font-size: 14px;
+    margin: 0;
+}
+
+.successMessage {
+    color: #38a169;
+    font-size: 14px;
+    margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+
+    .addProfile input,
+    .addProfile textarea {
+        background: #111;
+        border-color: #1a1a1a;
+        color: #ededed;
+    }
+
+    .addProfile input:focus,
+    .addProfile textarea:focus {
+        border-color: #ededed;
+    }
+}
+
+@media (max-width: 600px) {
+    .addProfile {
+        max-width: 100%;
+    }
+}
