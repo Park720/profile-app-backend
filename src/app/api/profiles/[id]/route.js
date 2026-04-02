@@ -1,35 +1,131 @@
-import Link from 'next/link';
-import prisma from '@/app/lib/prisma';
+import { put } from '@vercel/blob';
+import prisma from "@/app/lib/prisma";
 
-export async function generateMetadata({ params }) {
-    const { slug } = await params;
-    const profile = await prisma.profiles.findUnique({
-        where: { id: parseInt(slug) }
-    });
-    return {
-        title: `${profile?.name} | Profile App`,
-        description: `${profile?.title} - ${profile?.email}`,
-    };
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// GET single profile by ID
+export async function GET(request, { params }) {
+    try {
+        // Get the id from params and convert it to a number
+        const { id } = params;
+        const profileId = parseInt(id);
+
+        if (isNaN(profileId)) {
+            return Response.json({ error: 'Invalid profile ID' }, { status: 400 });
+        }
+
+        const profile = await prisma.profiles.findUnique({
+            where: { id: profileId },
+        });
+
+        if (!profile) {
+            return Response.json({ error: 'Profile not found' }, { status: 404 });
+        }
+
+        return Response.json({ data: profile }, { status: 200 });
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        return Response.json({ error: 'Failed to fetch profile' }, { status: 500 });
+    }
 }
 
-export default async function ProfileDetail({ params }) {
-    const { slug } = await params;
-    const profile = await prisma.profiles.findUnique({
-        where: { id: parseInt(slug) }
-    });
+// PUT - Update profile by ID
+export async function PUT(request, { params }) {
+    try {
+        // Get the id from params and convert it to a number
+        const { id } = params;
+        const profileId = parseInt(id);
 
-    if (!profile) {
-        return <p>Profile not found</p>;
+        if (isNaN(profileId)) {
+            return Response.json({ error: 'Invalid profile ID' }, { status: 400 });
+        }
+
+        const formData = await request.formData();
+        const name = formData.get('name');
+        const title = formData.get('title');
+        const email = formData.get('email');
+        const bio = formData.get('bio');
+        const imgFile = formData.get('img');
+        const existingImageUrl = formData.get('existingImageUrl');
+
+        if (!name || name.trim() === '') {
+            return Response.json({ error: 'Name is required' }, { status: 400 });
+        }
+        if (!title || title.trim() === '') {
+            return Response.json({ error: 'Title is required' }, { status: 400 });
+        }
+        if (!email || email.trim() === '') {
+            return Response.json({ error: 'Email is required' }, { status: 400 });
+        }
+        if (!bio || bio.trim() === '') {
+            return Response.json({ error: 'Bio is required' }, { status: 400 });
+        }
+
+        let imageUrl = existingImageUrl;
+
+        if (imgFile && imgFile.size > 0) {
+            if (imgFile.size > 1024 * 1024) {
+                return Response.json({ error: 'Image must be less than 1MB' }, { status: 400 });
+            }
+
+            const blob = await put(imgFile.name, imgFile, {
+                access: 'public',
+            });
+
+            imageUrl = blob.url;
+        }
+
+        const updated = await prisma.profiles.update({
+            where: { id: profileId },
+            data: {
+                name: name.trim(),
+                title: title.trim(),
+                email: email.trim(),
+                bio: bio.trim(),
+                image_url: imageUrl,
+            },
+        });
+        
+        return Response.json({ data: updated }, { status: 200 });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+
+        if (error.code === 'P2002') {
+            return Response.json({ error: 'Email already exists' }, { status: 400 });
+        }
+        if (error.code === 'P2025') {
+            return Response.json({ error: 'Profile not found' }, { status: 404 });
+        }
+
+        return Response.json({ error: 'Failed to update profile' }, { status: 500 });
     }
+}
 
-    return (
-        <main>
-            <h1>{profile.name}</h1>
-            <img src={profile.image_url || "/vercel.svg"} alt={profile.name} width={150} height={150} />
-            <p>{profile.email}</p>
-            <p>{profile.title}</p>
-            <p>{profile.bio}</p>
-            <Link href="/">← Back</Link>
-        </main>
-    );
+// DELETE profile by ID
+export async function DELETE(request, { params }) {
+    try {
+        // Get the id from params and convert it to a number
+        const { id } = params;
+        const profileId = parseInt(id);
+
+        if (isNaN(profileId)) {
+            return Response.json({ error: 'Invalid profile ID' }, { status: 400 });
+        }
+
+        // Delete the matching profile by id
+        await prisma.profiles.delete({
+            where: { id: profileId },
+        });
+
+        return Response.json({ message: 'Profile deleted successfully' }, { status: 200 });
+    } catch (error) {
+        console.error('Error deleting profile:', error);
+
+        if (error.code === 'P2025') {
+            return Response.json({ error: 'Profile not found' }, { status: 404 });
+        }
+
+        return Response.json({ error: 'Failed to delete profile' }, { status: 500 });
+    }
 }
