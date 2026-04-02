@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import styles from "./AddProfileForm.module.css";
+import styles from "./addProfileForm.module.css";
 
 const stripTags = (s) => String(s ?? "").replace(/<\/?[^>]+>/g, "");
 const trimCollapse = (s) =>
@@ -9,20 +9,24 @@ const trimCollapse = (s) =>
         .trim()
         .replace(/\s+/g, " ");
 
-export default function AddProfile() {
+export default function AddProfile({ existingProfile = {} }) {
     const router = useRouter();
     const nameRef = useRef(null);
+    const isEditMode = existingProfile && existingProfile.id;
+
     const [values, setValues] = useState({
-        name: "",
-        title: "",
-        email: "",
-        bio: "",
+        name: existingProfile?.name || "",
+        title: existingProfile?.title || "",
+        email: existingProfile?.email || "",
+        bio: existingProfile?.bio || "",
         img: null,
+        imgPreview: existingProfile?.image_url || "",
     });
+
     const [errors, setErrors] = useState("");
     const [success, setSuccess] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { name, title, email, bio, img } = values;
+    const { name, title, email, bio, img, imgPreview } = values;
 
     useEffect(() => {
         if (nameRef.current) {
@@ -35,7 +39,6 @@ export default function AddProfile() {
         if (name === "img") {
             const file = files[0];
             if (file && file.size < 1024 * 1024) {
-                // 1MB limit
                 setValues((prev) => ({ ...prev, img: files[0] }));
                 setErrors("");
             } else {
@@ -58,12 +61,20 @@ export default function AddProfile() {
             formData.append("title", stripTags(trimCollapse(title)));
             formData.append("email", stripTags(trimCollapse(email)));
             formData.append("bio", stripTags(bio).trim());
+
             if (img) {
                 formData.append("img", img);
+            } else if (imgPreview) {
+                formData.append("image_url", imgPreview);
             }
 
-            const response = await fetch("/api/profiles", {
-                method: "POST",
+            const endpoint = isEditMode
+                ? `/api/profiles/${existingProfile.id}`
+                : "/api/profiles";
+            const method = isEditMode ? "PUT" : "POST";
+
+            const response = await fetch(endpoint, {
+                method,
                 body: formData,
             });
 
@@ -72,16 +83,19 @@ export default function AddProfile() {
                 throw new Error(errorData.error || "Failed to submit form");
             }
 
-            setSuccess("Profile added successfully!");
-            setValues({
-                name: "",
-                title: "",
-                email: "",
-                bio: "",
-                img: null,
-            });
+            setSuccess(isEditMode ? "Profile updated successfully!" : "Profile added successfully!");
 
-            // Reset file input
+            if (!isEditMode) {
+                setValues({
+                    name: "",
+                    title: "",
+                    email: "",
+                    bio: "",
+                    img: null,
+                    imgPreview: "",
+                });
+            }
+
             const fileInput = document.getElementById("img");
             if (fileInput) fileInput.value = "";
 
@@ -95,6 +109,7 @@ export default function AddProfile() {
             setIsSubmitting(false);
         }
     };
+
     return (
         <form onSubmit={handleSubmit} className={styles["add-profile"]}>
             <label htmlFor="name">Name:</label>
@@ -107,6 +122,7 @@ export default function AddProfile() {
                 value={name}
                 onChange={onChange}
             />
+
             <label htmlFor="title">Title:</label>
             <input
                 type="text"
@@ -116,6 +132,7 @@ export default function AddProfile() {
                 value={title}
                 onChange={onChange}
             />
+
             <label htmlFor="email">Email:</label>
             <input
                 type="email"
@@ -125,6 +142,7 @@ export default function AddProfile() {
                 value={email}
                 onChange={onChange}
             />
+
             <label htmlFor="bio">Bio:</label>
             <textarea
                 name="bio"
@@ -134,16 +152,25 @@ export default function AddProfile() {
                 value={bio}
                 onChange={onChange}
             ></textarea>
+
             <label htmlFor="img">Image:</label>
             <input
                 type="file"
                 name="img"
                 id="img"
-                required
+                required={!isEditMode}
                 accept="image/png, image/jpeg, image/jpg, image/gif"
                 onChange={onChange}
             />
+
+            {imgPreview && (
+                <figure style={{ display: "flex", justifyContent: "center" }}>
+                    <img src={imgPreview} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} />
+                </figure>
+            )}
+
             {errors && <p className={styles.errorMessage}>{errors}</p>}
+
             <button
                 type="submit"
                 disabled={
@@ -152,11 +179,12 @@ export default function AddProfile() {
                     !stripTags(trimCollapse(title)) ||
                     !stripTags(trimCollapse(email)) ||
                     !stripTags(bio).trim() ||
-                    !img
+                    (!img && !imgPreview)
                 }
             >
-                Add Profile
+                {isEditMode ? "Update Profile" : "Add Profile"}
             </button>
+
             {success && <p className={styles.successMessage}>{success}</p>}
         </form>
     );
