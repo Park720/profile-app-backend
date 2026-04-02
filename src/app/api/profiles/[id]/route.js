@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request, { params }) {
     try {
         // Get the id from params and convert it to a number
-        const { id } = params;
+        const { id } = await params;
         const profileId = parseInt(id);
 
         if (isNaN(profileId)) {
@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
     try {
         // Get the id from params and convert it to a number
-        const { id } = params;
+        const { id } = await params;
         const profileId = parseInt(id);
 
         if (isNaN(profileId)) {
@@ -86,7 +86,7 @@ export async function PUT(request, { params }) {
                 image_url: imageUrl,
             },
         });
-        
+
         return Response.json({ data: updated }, { status: 200 });
     } catch (error) {
         console.error('Error updating profile:', error);
@@ -106,7 +106,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         // Get the id from params and convert it to a number
-        const { id } = params;
+        const { id } = await params;
         const profileId = parseInt(id);
 
         if (isNaN(profileId)) {
