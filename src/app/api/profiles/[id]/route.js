@@ -47,7 +47,7 @@ export async function PUT(request, { params }) {
         const email = formData.get('email');
         const bio = formData.get('bio');
         const imgFile = formData.get('img');
-        const existingImageUrl = formData.get('existingImageUrl');
+        const existingImageUrl = formData.get('existingImageUrl') || formData.get('image_url');
 
         if (!name || name.trim() === '') {
             return Response.json({ error: 'Name is required' }, { status: 400 });
